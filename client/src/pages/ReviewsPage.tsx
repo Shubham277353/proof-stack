@@ -37,7 +37,7 @@ function ScoreInput({ label, value, onChange, disabled }: {
 }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-ivory-300/50">
+      <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-ivory-300/60">
         {label}
       </label>
       <div className="flex gap-1">
@@ -47,10 +47,10 @@ function ScoreInput({ label, value, onChange, disabled }: {
             type="button"
             disabled={disabled}
             onClick={() => onChange(n)}
-            className={`h-8 w-8 rounded-md text-sm font-semibold transition ${
+            className={`h-9 w-9 rounded-lg text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-light ${
               value === n
-                ? 'bg-amber-accent text-white'
-                : 'border border-navy-600 text-ivory-300/50 hover:border-amber-light/50 hover:text-amber-light'
+                ? 'bg-amber-accent text-white shadow-sm'
+                : 'border border-navy-600 bg-navy-900/60 text-ivory-300/60 hover:border-amber-light/60 hover:bg-navy-800 hover:text-amber-light'
             } disabled:opacity-50`}
           >
             {n}
@@ -87,8 +87,8 @@ function ReviewForm({ requestId, onDone }: { requestId: string; onDone: (r: Revi
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4 rounded-xl border border-navy-700 bg-navy-800/40 p-5">
-      <p className="text-sm font-semibold text-ivory-100">Submit your review</p>
+    <form onSubmit={handleSubmit} noValidate className="mt-5 space-y-5 rounded-xl border border-navy-700 bg-navy-800/50 p-4 sm:p-5">
+      <div><p className="text-sm font-semibold text-ivory-100">Submit your review</p><p className="mt-1 text-xs text-ivory-300/45">Rate each area from 1 to 5, then leave constructive feedback.</p></div>
 
       {error && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</div>
@@ -116,7 +116,7 @@ function ReviewForm({ requestId, onDone }: { requestId: string; onDone: (r: Revi
           disabled={submitting}
           rows={4}
           placeholder="Provide constructive feedback on the skill claim and supporting evidence…"
-          className="w-full resize-none rounded-lg border border-navy-600 bg-navy-800 px-4 py-2.5 text-sm text-ivory-100 placeholder-navy-400 outline-none transition focus:border-amber-light focus:ring-1 focus:ring-amber-light disabled:opacity-50"
+          className="w-full resize-y rounded-lg border border-navy-600 bg-navy-900/70 px-4 py-3 text-sm text-ivory-100 placeholder-navy-400 outline-none transition focus:border-amber-light focus:ring-2 focus:ring-amber-light/20 disabled:opacity-50"
         />
       </div>
 
@@ -124,7 +124,7 @@ function ReviewForm({ requestId, onDone }: { requestId: string; onDone: (r: Revi
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-amber-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-amber-light disabled:opacity-60"
+          className="rounded-lg bg-amber-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-light focus-visible:ring-offset-2 focus-visible:ring-offset-navy-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? 'Submitting…' : 'Submit review'}
         </button>
@@ -164,8 +164,8 @@ function RequestCard({
   }
 
   return (
-    <div className="rounded-2xl border border-navy-700 bg-navy-900 shadow-md">
-      <div className="px-6 py-5">
+    <div className="overflow-hidden rounded-2xl border border-navy-700/90 bg-navy-900/90 shadow-lg shadow-black/10 transition-colors hover:border-navy-600">
+      <div className="px-4 py-5 sm:px-6">
         {/* Header row */}
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -173,10 +173,10 @@ function RequestCard({
               <span className="text-base font-semibold text-ivory-100">
                 {req.claim.skill.name}
               </span>
-              <span className="rounded-full bg-navy-700 px-2.5 py-0.5 text-xs text-ivory-300/60">
+              <span className="rounded-full border border-navy-600 bg-navy-800 px-2.5 py-1 text-xs font-medium text-ivory-300/70">
                 {req.claim.level.charAt(0) + req.claim.level.slice(1).toLowerCase()}
               </span>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLE[req.status]}`}>
+              <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLE[req.status]}`}>
                 {STATUS_LABEL[req.status]}
               </span>
             </div>
@@ -196,19 +196,19 @@ function RequestCard({
 
         {/* Reviewer actions — PENDING */}
         {isReviewer && req.status === 'PENDING' && (
-          <div className="mt-4 flex items-center gap-3">
+          <div className="mt-5 flex flex-wrap items-center gap-2.5 border-t border-navy-700/70 pt-4">
             <span className="text-xs text-ivory-300/40">Respond to this request:</span>
             <button
               onClick={() => respond('ACCEPTED')}
               disabled={responding}
-              className="rounded-md bg-emerald-700/60 px-3 py-1.5 text-xs font-medium text-emerald-200 transition hover:bg-emerald-600/60 disabled:opacity-50"
+              className="rounded-lg border border-emerald-700/60 bg-emerald-900/30 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-800/50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Accept
             </button>
             <button
               onClick={() => respond('DECLINED')}
               disabled={responding}
-              className="rounded-md border border-red-500/40 px-3 py-1.5 text-xs font-medium text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
+              className="rounded-lg border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Decline
             </button>
@@ -220,7 +220,7 @@ function RequestCard({
           <div className="mt-4">
             <button
               onClick={() => setShowReviewForm(true)}
-              className="rounded-lg bg-amber-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-light"
+              className="rounded-lg bg-amber-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-light focus-visible:ring-offset-2 focus-visible:ring-offset-navy-900"
             >
               Write review
             </button>
@@ -299,7 +299,7 @@ function RequestForm({
   const selectCls = 'w-full rounded-lg border border-navy-600 bg-navy-800 px-4 py-2.5 text-sm text-ivory-100 outline-none transition focus:border-amber-light focus:ring-1 focus:ring-amber-light disabled:opacity-50'
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+    <form onSubmit={handleSubmit} noValidate className="space-y-5">
       {error && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>
       )}
@@ -348,7 +348,7 @@ function RequestForm({
           disabled={submitting}
           rows={2}
           placeholder="Optional context for the reviewer…"
-          className="w-full resize-none rounded-lg border border-navy-600 bg-navy-800 px-4 py-2.5 text-sm text-ivory-100 placeholder-navy-400 outline-none transition focus:border-amber-light focus:ring-1 focus:ring-amber-light disabled:opacity-50"
+          className="w-full resize-y rounded-lg border border-navy-600 bg-navy-900/70 px-4 py-3 text-sm text-ivory-100 placeholder-navy-400 outline-none transition focus:border-amber-light focus:ring-2 focus:ring-amber-light/20 disabled:opacity-50"
         />
       </div>
 
@@ -358,7 +358,7 @@ function RequestForm({
           Cancel
         </button>
         <button type="submit" disabled={submitting}
-          className="rounded-lg bg-amber-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-amber-light disabled:opacity-60">
+          className="rounded-lg bg-amber-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-light focus-visible:ring-offset-2 focus-visible:ring-offset-navy-900 disabled:cursor-not-allowed disabled:opacity-60">
           {submitting ? 'Sending…' : 'Send request'}
         </button>
       </div>
@@ -398,17 +398,18 @@ export default function ReviewsPage() {
 
   return (
     <AppShell>
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-ivory-100">Peer Reviews</h1>
-          <p className="mt-0.5 text-sm text-ivory-300/50">
+          <div className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-light"><span className="h-1.5 w-1.5 rounded-full bg-amber-light" />Skill verification</div>
+          <h1 className="text-3xl font-semibold tracking-tight text-ivory-100">Peer Reviews</h1>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-ivory-300/55">
             Request and give reviews on skill claims.
           </p>
         </div>
         {!showCreate && (
           <button
             onClick={() => { setShowCreate(true); setCreateError('') }}
-            className="rounded-lg bg-amber-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-light"
+            className="rounded-lg bg-amber-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-light focus-visible:ring-offset-2 focus-visible:ring-offset-navy-900"
           >
             + Request review
           </button>
@@ -417,8 +418,9 @@ export default function ReviewsPage() {
 
       {/* Create form */}
       {showCreate && (
-        <div className="mb-8 rounded-2xl border border-navy-700 bg-navy-900 px-6 py-6 shadow-xl">
-          <h2 className="mb-5 text-base font-semibold text-ivory-100">New review request</h2>
+        <div className="mb-8 rounded-2xl border border-navy-700 bg-navy-900/90 p-4 shadow-xl sm:p-6">
+          <h2 className="mb-1 text-lg font-semibold text-ivory-100">New review request</h2>
+          <p className="mb-5 text-sm text-ivory-300/50">Choose one of your claims and a registered peer to review it.</p>
           {createError && (
             <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{createError}</div>
           )}
@@ -431,14 +433,14 @@ export default function ReviewsPage() {
         </div>
       )}
 
-      {loading && <div className="py-20 text-center text-sm text-ivory-300/40">Loading…</div>}
+      {loading && <div className="flex items-center justify-center gap-3 rounded-2xl border border-navy-700 bg-navy-900/50 py-16 text-sm text-ivory-300/50"><span className="h-5 w-5 animate-spin rounded-full border-2 border-navy-600 border-t-amber-light" />Loading review requests…</div>}
 
       {!loading && fetchError && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{fetchError}</div>
       )}
 
       {!loading && !fetchError && requests.length === 0 && !showCreate && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-navy-700 py-20 text-center">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-navy-700 bg-navy-900/30 px-5 py-16 text-center sm:py-20">
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-navy-800 text-ivory-300/30">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
@@ -448,7 +450,7 @@ export default function ReviewsPage() {
           <p className="mt-1 text-sm text-ivory-300/30">Request a peer review of one of your skill claims.</p>
           <button
             onClick={() => setShowCreate(true)}
-            className="mt-6 rounded-lg bg-amber-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-amber-light"
+            className="mt-6 rounded-lg bg-amber-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-light"
           >
             Request a review
           </button>
@@ -459,10 +461,10 @@ export default function ReviewsPage() {
         <div className="space-y-8">
           {incoming.length > 0 && (
             <section>
-              <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-ivory-300/40">
+              <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-ivory-300/55">
                 Incoming — reviews to give ({incoming.length})
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {incoming.map(r => (
                   <RequestCard key={r.id} req={r} currentUserId={user!.id} onUpdate={updateRequest} />
                 ))}
@@ -472,10 +474,10 @@ export default function ReviewsPage() {
 
           {outgoing.length > 0 && (
             <section>
-              <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-ivory-300/40">
+              <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-ivory-300/55">
                 Outgoing — reviews requested ({outgoing.length})
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {outgoing.map(r => (
                   <RequestCard key={r.id} req={r} currentUserId={user!.id} onUpdate={updateRequest} />
                 ))}

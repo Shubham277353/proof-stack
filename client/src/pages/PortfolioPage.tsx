@@ -105,11 +105,11 @@ export default function PortfolioPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-navy-950">
+    <div className="min-h-screen overflow-hidden bg-navy-950 text-ivory-100">
       {/* Nav */}
-      <header className="border-b border-navy-800 bg-navy-950/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <Link to="/" className="text-lg font-bold tracking-tight text-ivory-100">
+      <header className="sticky top-0 z-20 border-b border-white/5 bg-navy-950/85 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
+          <Link to="/" className="text-xl font-bold tracking-tight text-ivory-100">
             Proof<span className="text-amber-light">stack</span>
           </Link>
           <Link
@@ -121,24 +121,25 @@ export default function PortfolioPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-12">
+      <main className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
         {/* Hero */}
-        <section className="mb-12">
-          <div className="flex items-start gap-5">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-navy-800 text-2xl font-bold text-amber-light">
+        <section className="relative mb-12 overflow-hidden rounded-3xl border border-amber-light/15 bg-gradient-to-br from-navy-900 via-navy-900 to-navy-800/60 p-6 shadow-2xl shadow-black/20 sm:p-10">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-amber-light/5 blur-3xl" />
+          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-7">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl border border-amber-light/20 bg-gradient-to-br from-amber-light/20 to-amber-accent/5 text-3xl font-bold text-amber-light shadow-lg shadow-black/20 sm:h-24 sm:w-24 sm:text-4xl">
               {displayName.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-ivory-100">{displayName}</h1>
-              <p className="mt-0.5 text-sm font-mono text-ivory-300/40">@{portfolio.username}</p>
+              <h1 className="text-3xl font-bold tracking-tight text-ivory-100 sm:text-4xl">{displayName}</h1>
+              <p className="mt-2 text-sm font-mono text-amber-light/80">@{portfolio.username}</p>
               {portfolio.bio && (
-                <p className="mt-3 max-w-xl text-sm leading-relaxed text-ivory-300/70">{portfolio.bio}</p>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-ivory-300/70">{portfolio.bio}</p>
               )}
             </div>
           </div>
 
           {/* Stats strip */}
-          <div className="mt-8 flex flex-wrap gap-4">
+          <div className="relative mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
             {[
               { label: 'Projects', value: portfolio.projects.length },
               { label: 'Skill Claims', value: portfolio.skillClaims.length },
@@ -151,9 +152,9 @@ export default function PortfolioPage() {
                 ),
               },
             ].map(({ label, value }) => (
-              <div key={label} className="rounded-xl border border-navy-700 bg-navy-900 px-5 py-3 text-center">
-                <p className="text-xl font-bold text-ivory-100">{value}</p>
-                <p className="text-xs text-ivory-300/50">{label}</p>
+              <div key={label} className="rounded-2xl border border-white/5 bg-navy-950/60 px-4 py-4 text-left transition hover:border-amber-light/20 sm:px-5">
+                <p className="text-2xl font-bold tracking-tight text-ivory-100 sm:text-3xl">{value}</p>
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-ivory-300/45">{label}</p>
               </div>
             ))}
           </div>
@@ -161,18 +162,18 @@ export default function PortfolioPage() {
 
         {/* Projects */}
         <section className="mb-12">
-          <h2 className="mb-4 text-lg font-semibold text-ivory-100">Projects</h2>
+          <div className="mb-5 flex items-end justify-between gap-3"><div><p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-light">Selected work</p><h2 className="text-2xl font-semibold tracking-tight text-ivory-100">Projects</h2></div><span className="rounded-full border border-navy-700 bg-navy-900 px-3 py-1 text-xs text-ivory-300/60">{portfolio.projects.length} total</span></div>
           {portfolio.projects.length === 0 ? (
-            <p className="text-sm text-ivory-300/40">No published projects yet.</p>
+            <div className="rounded-2xl border border-dashed border-navy-700 bg-navy-900/40 px-6 py-10 text-center"><p className="text-sm font-medium text-ivory-200">No published projects yet</p><p className="mt-1 text-xs text-ivory-300/45">Projects will appear here when they are added to this portfolio.</p></div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               {portfolio.projects.map(project => (
                 <div
                   key={project.id}
-                  className="rounded-2xl border border-navy-700 bg-navy-900 p-5 flex flex-col gap-3"
+                  className="group flex flex-col gap-4 rounded-2xl border border-white/5 bg-gradient-to-br from-navy-900 to-navy-900/70 p-5 shadow-lg shadow-black/10 transition duration-200 hover:-translate-y-0.5 hover:border-amber-light/20 hover:shadow-xl hover:shadow-black/20 sm:p-6"
                 >
                   <div>
-                    <h3 className="font-semibold text-ivory-100">{project.title}</h3>
+                    <h3 className="text-lg font-semibold tracking-tight text-ivory-100 transition group-hover:text-amber-light">{project.title}</h3>
                     {project.description && (
                       <p className="mt-1 text-sm text-ivory-300/60 line-clamp-2">{project.description}</p>
                     )}
@@ -243,19 +244,19 @@ export default function PortfolioPage() {
 
         {/* Skill Claims */}
         <section className="mb-12">
-          <h2 className="mb-4 text-lg font-semibold text-ivory-100">Skill Claims</h2>
+          <div className="mb-5 flex items-end justify-between gap-3"><div><p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-light">Verified capability</p><h2 className="text-2xl font-semibold tracking-tight text-ivory-100">Skill Claims</h2></div><span className="rounded-full border border-navy-700 bg-navy-900 px-3 py-1 text-xs text-ivory-300/60">{portfolio.skillClaims.length} total</span></div>
           {sortedClaims.length === 0 ? (
-            <p className="text-sm text-ivory-300/40">No skill claims yet.</p>
+            <div className="rounded-2xl border border-dashed border-navy-700 bg-navy-900/40 px-6 py-10 text-center"><p className="text-sm font-medium text-ivory-200">No skill claims yet</p><p className="mt-1 text-xs text-ivory-300/45">Skills and peer-review feedback will appear here.</p></div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               {sortedClaims.map(claim => {
                 const avg = avgScore(claim)
                 const completedReviews = claim.reviewRequests.filter(r => r.review)
                 return (
-                  <div key={claim.id} className="rounded-2xl border border-navy-700 bg-navy-900 p-5 flex flex-col gap-3">
+                  <div key={claim.id} className="group flex flex-col gap-4 rounded-2xl border border-white/5 bg-gradient-to-br from-navy-900 to-navy-900/70 p-5 shadow-lg shadow-black/10 transition duration-200 hover:-translate-y-0.5 hover:border-amber-light/20 hover:shadow-xl hover:shadow-black/20 sm:p-6">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="font-semibold text-ivory-100">{claim.skill.name}</p>
+                        <p className="text-lg font-semibold tracking-tight text-ivory-100">{claim.skill.name}</p>
                         {claim.skill.category && (
                           <p className="text-xs text-ivory-300/40">{claim.skill.category}</p>
                         )}
@@ -316,7 +317,7 @@ export default function PortfolioPage() {
                             const reviewer = rv.reviewRequest.reviewer
                             const reviewerName = reviewer.displayName || reviewer.name
                             return (
-                              <div key={rr.id} className="rounded-xl bg-navy-800/60 p-3">
+                              <div key={rr.id} className="rounded-xl border border-white/5 bg-navy-950/60 p-3.5">
                                 <div className="mb-1.5 flex items-center justify-between gap-2">
                                   <p className="text-xs font-medium text-ivory-300/70">{reviewerName}</p>
                                   <div className="flex items-center gap-1">
@@ -349,7 +350,7 @@ export default function PortfolioPage() {
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-navy-800 pt-8 text-center">
+        <footer className="mt-4 border-t border-white/5 pt-8 text-center">
           <p className="text-xs text-ivory-300/30">
             Built with{' '}
             <Link to="/" className="text-amber-light/60 hover:text-amber-light transition">
