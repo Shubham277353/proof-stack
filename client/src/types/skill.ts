@@ -27,7 +27,8 @@ export interface SkillClaim {
 }
 
 export interface ClaimFormData {
-  skillId: string
+  skillId?: string
+  skillName?: string
   level: ClaimLevel
   summary: string
   evidenceIds: string[]

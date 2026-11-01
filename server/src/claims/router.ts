@@ -46,6 +46,49 @@ async function validateEvidenceOwnership(
   return null;
 }
 
+// Resolve a skill by id OR by name (case-insensitive). Creates the skill if
+// it doesn't exist yet. Returns the skill id, or null if input is invalid.
+async function resolveSkill(
+  skillId: unknown,
+  skillName: unknown
+): Promise<{ id: string } | null> {
+  // Prefer explicit id
+  if (skillId && typeof skillId === "string") {
+    const s = await prisma.skill.findUnique({ where: { id: skillId }, select: { id: true } });
+    return s ?? null;
+  }
+  if (!skillName || typeof skillName !== "string" || !skillName.trim()) return null;
+  // Normalise: trim and collapse internal whitespace
+  const trimmed = skillName.trim().replace(/\s+/g, " ");
+  // Case-insensitive match against existing skills
+  const existing = await prisma.skill.findFirst({
+    where: { name: { equals: trimmed, mode: "insensitive" } },
+    select: { id: true },
+  });
+  if (existing) return existing;
+  // Create on the fly. Guard against concurrent requests hitting the unique
+  // constraint simultaneously by catching P2002 and re-fetching.
+  try {
+    return await prisma.skill.create({
+      data: { name: trimmed },
+      select: { id: true },
+    });
+  } catch (e: unknown) {
+    if (
+      typeof e === "object" && e !== null && "code" in e &&
+      (e as { code: string }).code === "P2002"
+    ) {
+      // Another request created it first — fetch the winner
+      const race = await prisma.skill.findFirst({
+        where: { name: { equals: trimmed, mode: "insensitive" } },
+        select: { id: true },
+      });
+      return race ?? null;
+    }
+    throw e;
+  }
+}
+
 // GET /api/claims
 router.get("/", async (req: AuthRequest, res: Response): Promise<void> => {
   const claims = await prisma.skillClaim.findMany({
@@ -58,20 +101,16 @@ router.get("/", async (req: AuthRequest, res: Response): Promise<void> => {
 
 // POST /api/claims
 router.post("/", async (req: AuthRequest, res: Response): Promise<void> => {
-  const { skillId, level, summary, evidenceIds } = req.body;
+  const { skillId, skillName, level, summary, evidenceIds } = req.body;
 
-  if (!skillId || typeof skillId !== "string") {
-    res.status(400).json({ error: "skillId is required" });
-    return;
-  }
   if (!level || !VALID_LEVELS.includes(level)) {
     res.status(400).json({ error: `level must be one of: ${VALID_LEVELS.join(", ")}` });
     return;
   }
 
-  const skill = await prisma.skill.findUnique({ where: { id: skillId } });
+  const skill = await resolveSkill(skillId, skillName);
   if (!skill) {
-    res.status(400).json({ error: "Skill not found" });
+    res.status(400).json({ error: "skillId or skillName is required" });
     return;
   }
 
@@ -86,7 +125,7 @@ router.post("/", async (req: AuthRequest, res: Response): Promise<void> => {
     const claim = await prisma.skillClaim.create({
       data: {
         userId: req.userId as string,
-        skillId,
+        skillId: skill.id,
         level,
         summary: summary?.trim() ?? null,
         evidenceLinks: ids.length
@@ -126,7 +165,7 @@ router.patch("/:id", async (req: AuthRequest, res: Response): Promise<void> => {
     return;
   }
 
-  const { level, status, summary, evidenceIds } = req.body;
+  const { level, status, summary, evidenceIds, skillName } = req.body;
 
   if (level !== undefined && !VALID_LEVELS.includes(level)) {
     res.status(400).json({ error: `level must be one of: ${VALID_LEVELS.join(", ")}` });
@@ -135,6 +174,17 @@ router.patch("/:id", async (req: AuthRequest, res: Response): Promise<void> => {
   if (status !== undefined && !VALID_STATUSES.includes(status)) {
     res.status(400).json({ error: `status must be one of: ${VALID_STATUSES.join(", ")}` });
     return;
+  }
+
+  // Resolve new skill if skillName supplied (edit is locked in UI but handle gracefully)
+  let resolvedSkillId: string | undefined;
+  if (skillName !== undefined) {
+    const s = await resolveSkill(undefined, skillName);
+    if (!s) {
+      res.status(400).json({ error: "Invalid skillName" });
+      return;
+    }
+    resolvedSkillId = s.id;
   }
 
   // If evidenceIds supplied, replace the full set
@@ -162,6 +212,7 @@ router.patch("/:id", async (req: AuthRequest, res: Response): Promise<void> => {
       return tx.skillClaim.update({
         where: { id: req.params.id },
         data: {
+          ...(resolvedSkillId !== undefined && { skillId: resolvedSkillId }),
           ...(level !== undefined && { level }),
           ...(status !== undefined && { status }),
           ...(summary !== undefined && { summary: summary?.trim() ?? null }),

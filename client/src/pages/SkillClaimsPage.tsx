@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import AppShell from '../components/AppShell'
 import { InlineSpinner, ErrorBanner, EmptyState, Badge, PrimaryBtn, GhostBtn, DangerBtn, inputCls } from '../components/ui'
 import type { BadgeVariant } from '../components/ui'
@@ -58,20 +58,106 @@ function EvidencePicker({ allEvidence, selected, onChange, disabled }: {
   )
 }
 
+// ── Skill combobox ───────────────────────────────────────────────────────────
+// Filters existing skills as the user types. If the typed name doesn't match
+// any existing skill (case-insensitive), the user can still submit it as a
+// custom skill — the backend will create it on the fly.
+
+interface SkillComboboxProps {
+  skills: Skill[]
+  value: string        // the display text in the input
+  onChange: (text: string) => void
+  disabled: boolean
+}
+
+function SkillCombobox({ skills, value, onChange, disabled }: SkillComboboxProps) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  const filtered = value.trim()
+    ? skills.filter(s => s.name.toLowerCase().includes(value.trim().toLowerCase()))
+    : skills
+
+  const exactMatch = skills.some(
+    s => s.name.toLowerCase() === value.trim().toLowerCase()
+  )
+
+  // Close on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative">
+      <input
+        type="text"
+        autoComplete="off"
+        name="skill-name"
+        value={value}
+        onChange={e => { onChange(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        disabled={disabled}
+        placeholder="e.g. React, Docker, Rust…"
+        className={inputCls()}
+      />
+      {open && value.trim() && (
+        <div className="absolute z-20 mt-1 w-full rounded-lg border border-navy-700 bg-navy-800 shadow-xl overflow-hidden">
+          {filtered.length > 0 && (
+            <ul className="max-h-48 overflow-y-auto py-1">
+              {filtered.map(s => (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => { onChange(s.name); setOpen(false) }}
+                    className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-ivory-100 hover:bg-navy-700"
+                  >
+                    <span>{s.name}</span>
+                    {s.category && <span className="text-xs text-ivory-300/40">{s.category}</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {!exactMatch && value.trim().length >= 2 && (
+            <div className="border-t border-navy-700 px-3 py-2">
+              <button
+                type="button"
+                onMouseDown={e => e.preventDefault()}
+                onClick={() => setOpen(false)}
+                className="text-xs text-ivory-300/50"
+              >
+                Use <span className="font-medium text-amber-light">"{value.trim()}"</span> as a custom skill
+              </button>
+            </div>
+          )}
+          {filtered.length === 0 && value.trim().length < 2 && (
+            <p className="px-3 py-2 text-xs text-ivory-300/40">Type to search…</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface FormProps {
   skills: Skill[]
   allEvidence: EvidenceItem[]
-  initial: { skillId: string; level: ClaimLevel; summary: string; evidenceIds: string[] }
+  initial: { skillName: string; level: ClaimLevel; summary: string; evidenceIds: string[] }
   lockSkill: boolean
   submitLabel: string
   submitting: boolean
   error: string
-  onSubmit: (data: { skillId: string; level: ClaimLevel; summary: string; evidenceIds: string[] }) => void
+  onSubmit: (data: { skillName: string; level: ClaimLevel; summary: string; evidenceIds: string[] }) => void
   onCancel: () => void
 }
 
 function ClaimForm({ skills, allEvidence, initial, lockSkill, submitLabel, submitting, error, onSubmit, onCancel }: FormProps) {
-  const [skillId, setSkillId] = useState(initial.skillId)
+  const [skillName, setSkillName] = useState(initial.skillName)
   const [level, setLevel] = useState<ClaimLevel>(initial.level)
   const [summary, setSummary] = useState(initial.summary)
   const [evidenceIds, setEvidenceIds] = useState<string[]>(initial.evidenceIds)
@@ -79,9 +165,9 @@ function ClaimForm({ skills, allEvidence, initial, lockSkill, submitLabel, submi
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!skillId) { setFieldError('Please select a skill'); return }
+    if (!skillName.trim()) { setFieldError('Please enter or select a skill'); return }
     setFieldError('')
-    onSubmit({ skillId, level, summary, evidenceIds })
+    onSubmit({ skillName: skillName.trim(), level, summary, evidenceIds })
   }
 
   return (
@@ -93,11 +179,11 @@ function ClaimForm({ skills, allEvidence, initial, lockSkill, submitLabel, submi
           <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-ivory-300/55">
             Skill <span className="text-red-400">*</span>
           </label>
-          <select value={skillId} onChange={e => setSkillId(e.target.value)}
-            disabled={submitting || lockSkill} className={inputCls()}>
-            <option value="">Select a skill…</option>
-            {skills.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+          {lockSkill ? (
+            <input type="text" value={skillName} disabled className={inputCls()} />
+          ) : (
+            <SkillCombobox skills={skills} value={skillName} onChange={setSkillName} disabled={submitting} />
+          )}
         </div>
         <div>
           <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-ivory-300/55">
@@ -169,21 +255,25 @@ export default function SkillClaimsPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  async function handleCreate(data: { skillId: string; level: ClaimLevel; summary: string; evidenceIds: string[] }) {
+  async function handleCreate(data: { skillName: string; level: ClaimLevel; summary: string; evidenceIds: string[] }) {
     setCreating(true); setCreateError('')
     try {
-      const { claim } = await api.createClaim(data)
+      const { claim } = await api.createClaim({ skillName: data.skillName, level: data.level, summary: data.summary, evidenceIds: data.evidenceIds })
       setClaims(prev => [claim, ...prev])
+      // Add the resolved skill to local list if it's new
+      if (!skills.find(s => s.name.toLowerCase() === data.skillName.toLowerCase())) {
+        setSkills(prev => [...prev, claim.skill])
+      }
       setShowCreate(false)
     } catch (e) {
       setCreateError(e instanceof Error ? e.message : 'Failed to create claim')
     } finally { setCreating(false) }
   }
 
-  async function handleUpdate(id: string, data: { skillId: string; level: ClaimLevel; summary: string; evidenceIds: string[] }) {
+  async function handleUpdate(id: string, data: { skillName: string; level: ClaimLevel; summary: string; evidenceIds: string[] }) {
     setUpdating(true); setUpdateError('')
     try {
-      const { claim } = await api.updateClaim(id, data)
+      const { claim } = await api.updateClaim(id, { skillName: data.skillName, level: data.level, summary: data.summary, evidenceIds: data.evidenceIds })
       setClaims(prev => prev.map(x => x.id === id ? claim : x))
       setEditingId(null)
     } catch (e) {
@@ -219,7 +309,7 @@ export default function SkillClaimsPage() {
           <h2 className="mb-5 text-base font-semibold text-ivory-100">New skill claim</h2>
           <ClaimForm
             skills={skills} allEvidence={allEvidence}
-            initial={{ skillId: '', level: 'BEGINNER', summary: '', evidenceIds: [] }}
+            initial={{ skillName: '', level: 'BEGINNER', summary: '', evidenceIds: [] }}
             lockSkill={false} submitLabel="Create claim"
             submitting={creating} error={createError}
             onSubmit={handleCreate}
@@ -253,7 +343,7 @@ export default function SkillClaimsPage() {
                   <h2 className="mb-5 text-base font-semibold text-ivory-100">Edit claim</h2>
                   <ClaimForm
                     skills={skills} allEvidence={allEvidence}
-                    initial={{ skillId: claim.skill.id, level: claim.level, summary: claim.summary ?? '', evidenceIds: claim.evidenceLinks.map(l => l.evidence.id) }}
+                    initial={{ skillName: claim.skill.name, level: claim.level, summary: claim.summary ?? '', evidenceIds: claim.evidenceLinks.map(l => l.evidence.id) }}
                     lockSkill={true} submitLabel="Save changes"
                     submitting={updating} error={updateError}
                     onSubmit={data => handleUpdate(claim.id, data)}
