@@ -82,10 +82,19 @@ export const api = {
 
   // ── Reviews ───────────────────────────────────────────────────────────────
   getReviews: () => request<{ requests: ReviewRequest[] }>('/reviews'),
-  createReviewRequest: (claimId: string, reviewerId: string, message: string) =>
+  createReviewRequest: (
+    claimId: string,
+    reviewerId: string,
+    message: string,
+    attachments: Array<
+      | { type: 'project'; projectId: string; label?: string }
+      | { type: 'evidence'; evidenceId: string; label?: string }
+      | { type: 'url'; externalUrl: string; label?: string }
+    >
+  ) =>
     request<{ request: ReviewRequest }>('/reviews', {
       method: 'POST',
-      body: JSON.stringify({ claimId, reviewerId, message }),
+      body: JSON.stringify({ claimId, reviewerId, message, attachments }),
     }),
   respondToRequest: (id: string, status: 'ACCEPTED' | 'DECLINED') =>
     request<{ request: ReviewRequest }>(`/reviews/${id}`, {

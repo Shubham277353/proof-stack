@@ -27,6 +27,14 @@ export interface Review {
   updatedAt: string
 }
 
+export interface ReviewAttachment {
+  id: string
+  externalUrl: string | null
+  label: string | null
+  project: { id: string; title: string; repoUrl: string | null; liveUrl: string | null } | null
+  evidence: { id: string; title: string; url: string | null } | null
+}
+
 export interface ReviewRequest {
   id: string
   status: ReviewRequestStatus
@@ -37,4 +45,5 @@ export interface ReviewRequest {
   reviewer: ReviewUser
   claim: ReviewClaim
   review: Review | null
+  attachments: ReviewAttachment[]
 }
