@@ -73,6 +73,7 @@ model Project {
   ownerId  String
   owner    User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   evidence Evidence[]
+  reviewAttachments ReviewRequestAttachment[]
 
   @@index([ownerId])
 }
@@ -89,7 +90,8 @@ model Evidence {
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  claimLinks ClaimEvidence[]
+  claimLinks          ClaimEvidence[]
+  reviewAttachments   ReviewRequestAttachment[]
 
   @@index([projectId])
 }
@@ -151,11 +153,28 @@ model ReviewRequest {
   claimId     String
   claim       SkillClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
 
-  review Review?
+  review      Review?
+  attachments ReviewRequestAttachment[]
 
   @@index([requesterId])
   @@index([reviewerId])
   @@index([claimId])
+}
+
+model ReviewRequestAttachment {
+  id              String   @id @default(uuid())
+  reviewRequestId String
+  projectId       String?
+  evidenceId      String?
+  externalUrl     String?
+  label           String?
+  createdAt       DateTime @default(now())
+
+  reviewRequest ReviewRequest @relation(fields: [reviewRequestId], references: [id], onDelete: Cascade)
+  project       Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  evidence      Evidence?     @relation(fields: [evidenceId], references: [id], onDelete: SetNull)
+
+  @@index([reviewRequestId])
 }
 
 model Review {
