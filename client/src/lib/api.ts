@@ -5,6 +5,10 @@ import type { Skill, SkillClaim, ClaimFormData } from '../types/skill'
 import type { ReviewRequest, ReviewUser } from '../types/review'
 import type { Portfolio } from '../types/portfolio'
 
+// In development Vite proxies /api → localhost:4000, so the base is empty.
+// In production set VITE_API_URL=https://api.example.com (no trailing slash).
+const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem('ps_token')
   const headers: Record<string, string> = {
@@ -12,7 +16,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options?.headers as Record<string, string> | undefined),
   }
-  const res = await fetch(`/api${path}`, { ...options, headers })
+  const res = await fetch(`${API_BASE}/api${path}`, { ...options, headers })
   const data: unknown = await res.json().catch(() => ({}))
   if (!res.ok) {
     const msg = (data as { error?: string }).error ?? 'Something went wrong'
@@ -27,7 +31,7 @@ async function requestEmpty(path: string, options?: RequestInit): Promise<void> 
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
-  const res = await fetch(`/api${path}`, { ...options, headers })
+  const res = await fetch(`${API_BASE}/api${path}`, { ...options, headers })
   if (!res.ok) {
     const data = await res.json().catch(() => ({})) as { error?: string }
     throw new Error(data.error ?? 'Something went wrong')

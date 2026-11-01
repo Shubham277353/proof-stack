@@ -16,7 +16,30 @@ import portfolioRouter from "./portfolio/router";
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+// Build allowed-origins list from CLIENT_URL (comma-separated) or fall back to
+// permissive mode in development. In production CLIENT_URL must be set.
+const rawClientUrl = process.env.CLIENT_URL ?? '';
+const allowedOrigins = rawClientUrl
+  ? rawClientUrl.split(',').map(s => s.trim()).filter(Boolean)
+  : [];
+
+app.use(
+  cors(
+    allowedOrigins.length > 0
+      ? {
+          origin: (origin, callback) => {
+            // Allow server-to-server requests (no Origin header) and listed origins
+            if (!origin || allowedOrigins.includes(origin)) {
+              callback(null, true);
+            } else {
+              callback(new Error(`CORS: origin ${origin} not allowed`));
+            }
+          },
+          credentials: true,
+        }
+      : undefined // no CLIENT_URL → allow all (dev only)
+  )
+);
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
